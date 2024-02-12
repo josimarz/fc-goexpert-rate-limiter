@@ -27,7 +27,7 @@ type MockRateLimiter struct {
 }
 
 func (rt *MockRateLimiter) CanGo(ctx context.Context, r *http.Request) (bool, error) {
-	key := r.Header.Get("x-api-key")
+	key := r.Header.Get("API_KEY")
 	if key == "" || !rt.settings.LimitByToken {
 		host, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {

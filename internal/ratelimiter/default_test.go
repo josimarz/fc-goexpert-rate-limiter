@@ -39,7 +39,7 @@ func TestDefaultRateLimiter(t *testing.T) {
 		if proceed, err := rateLimiter.CanGo(ctx, req); proceed || err != nil {
 			t.Errorf("CanGo(%v, %v) = (%v, %v), want (%v, %v)", ctx, req, proceed, err, false, nil)
 		}
-		req.Header.Add("x-api-key", "p7eWgd0PvJcqB3ea45pw3k5thpWaqpI12RGYU3MiP91Kgao5MCXtlFtL2rwISxYL")
+		req.Header.Add("API_KEY", "p7eWgd0PvJcqB3ea45pw3k5thpWaqpI12RGYU3MiP91Kgao5MCXtlFtL2rwISxYL")
 		for i := 0; i < 100; i++ {
 			if proceed, err := rateLimiter.CanGo(ctx, req); !proceed || err != nil {
 				t.Errorf("CanGo(%v, %v) = (%v, %v), want (%v, %v)", ctx, req, proceed, err, true, nil)
