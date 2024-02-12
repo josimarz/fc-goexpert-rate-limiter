@@ -30,7 +30,7 @@ func TestDefaultRateLimiter(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		req.RemoteAddr = "127.0.0.1"
+		req.RemoteAddr = "127.0.0.1:0000"
 		for i := 0; i < 10; i++ {
 			if proceed, err := rateLimiter.CanGo(ctx, req); !proceed || err != nil {
 				t.Errorf("CanGo(%v, %v) = (%v, %v), want (%v, %v)", ctx, req, proceed, err, true, nil)

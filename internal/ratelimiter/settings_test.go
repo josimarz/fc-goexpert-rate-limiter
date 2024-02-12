@@ -7,13 +7,13 @@ func TestNewSettings(t *testing.T) {
 	expirationTime := 60
 	limitByToken := true
 	settings := NewSettings(rateLimit, expirationTime, limitByToken)
-	if settings.ratelimit != rateLimit {
-		t.Errorf("settings.rateLimit = %v, want %v", settings.ratelimit, rateLimit)
+	if settings.Ratelimit != rateLimit {
+		t.Errorf("settings.rateLimit = %v, want %v", settings.Ratelimit, rateLimit)
 	}
-	if settings.expirationTime != expirationTime {
-		t.Errorf("settings.expirationTime = %v, want %v", settings.expirationTime, expirationTime)
+	if settings.ExpirationTime != expirationTime {
+		t.Errorf("settings.expirationTime = %v, want %v", settings.ExpirationTime, expirationTime)
 	}
-	if settings.limitByToken != limitByToken {
-		t.Errorf("settings.limitByToken = %v, want %v", settings.limitByToken, limitByToken)
+	if settings.LimitByToken != limitByToken {
+		t.Errorf("settings.limitByToken = %v, want %v", settings.LimitByToken, limitByToken)
 	}
 }

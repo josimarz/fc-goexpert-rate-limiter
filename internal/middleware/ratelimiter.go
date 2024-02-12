@@ -22,7 +22,7 @@ func (m *RateLimiterMiddleware) Execute(ctx context.Context, next http.Handler) 
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		if proceed {
+		if !proceed {
 			http.Error(w, "you have reached the maximum number of requests or actions allowed within a certain time frame", http.StatusTooManyRequests)
 			return
 		}

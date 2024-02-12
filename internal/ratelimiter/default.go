@@ -2,6 +2,7 @@ package ratelimiter
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"time"
 
@@ -21,8 +22,12 @@ func NewDefaultRateLimiter(settings *Settings, lockGateway gateway.LockGateway, 
 
 func (rt *DefaultRateLimiter) CanGo(ctx context.Context, r *http.Request) (bool, error) {
 	key := r.Header.Get("x-api-key")
-	if key == "" || !rt.settings.limitByToken {
-		key = r.RemoteAddr
+	if key == "" || !rt.settings.LimitByToken {
+		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			return false, err
+		}
+		key = host
 	}
 	locked, err := rt.lockGateway.IsLocked(ctx, key)
 	if locked {
@@ -36,7 +41,7 @@ func (rt *DefaultRateLimiter) CanGo(ctx context.Context, r *http.Request) (bool,
 		return false, err
 	}
 	if limit == 0 {
-		limit = rt.settings.ratelimit
+		limit = rt.settings.Ratelimit
 	}
 	total, err := rt.requestGateway.Count(ctx, key)
 	if err != nil {
@@ -47,7 +52,7 @@ func (rt *DefaultRateLimiter) CanGo(ctx context.Context, r *http.Request) (bool,
 		return false, err
 	}
 	if total >= limit {
-		if err := rt.lockGateway.Lock(ctx, key, time.Second*time.Duration(rt.settings.expirationTime)); err != nil {
+		if err := rt.lockGateway.Lock(ctx, key, time.Second*time.Duration(rt.settings.ExpirationTime)); err != nil {
 			return false, err
 		}
 		return false, nil

@@ -8,8 +8,23 @@ services:
       - /bin/sh
       - -c
       - redis-server --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD variable is not set}"
-    volumes:
-      - redis:/var/lib/redis/data
-      - .redis.conf:/usr/local/etc/redis/redis.conf
     ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
+      - "$REDIS_PORT:$REDIS_PORT"
+    env_file:
+      - app.env
+    networks:
+      - app-network
+  app:
+    container_name: rate-limiter
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

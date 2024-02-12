@@ -1,11 +1,14 @@
 package ratelimiter
 
 type Settings struct {
-	ratelimit      int
-	expirationTime int
-	limitByToken   bool
+	Ratelimit      int
+	ExpirationTime int
+	LimitByToken   bool
 }
 
 func NewSettings(ratelimit, expirationTime int, limitByToken bool) *Settings {
-	return &Settings{ratelimit, expirationTime, limitByToken}
+	return &Settings{
+		Ratelimit:      ratelimit,
+		ExpirationTime: expirationTime,
+		LimitByToken:   limitByToken}
 }
