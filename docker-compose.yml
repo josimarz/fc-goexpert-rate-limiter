@@ -7,9 +7,9 @@ services:
     command:
       - /bin/sh
       - -c
-      - redis-server --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD variable is not set}"
+      - redis-server --requirepass "$${DB_PASSWORD:?DB_PASSWORD variable is not set}"
     ports:
-      - "$REDIS_PORT:$REDIS_PORT"
+      - "$DB_PORT:$DB_PORT"
     env_file:
       - app.env
     networks:

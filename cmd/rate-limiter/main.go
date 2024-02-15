@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,10 +10,9 @@ import (
 	"github.com/josimarz/fc-goexpert-rate-limiter/configs"
 	"github.com/josimarz/fc-goexpert-rate-limiter/internal/gateway"
 	"github.com/josimarz/fc-goexpert-rate-limiter/internal/handler"
-	redis_gateway "github.com/josimarz/fc-goexpert-rate-limiter/internal/infra/db/redis/gateway"
+	"github.com/josimarz/fc-goexpert-rate-limiter/internal/infra/db"
 	"github.com/josimarz/fc-goexpert-rate-limiter/internal/middleware"
 	"github.com/josimarz/fc-goexpert-rate-limiter/internal/ratelimiter"
-	"github.com/redis/go-redis/v9"
 )
 
 type Token struct {
@@ -23,22 +21,18 @@ type Token struct {
 }
 
 var (
-	config         *configs.Config
-	redisClient    *redis.Client
-	settings       *ratelimiter.Settings
-	lockGateway    gateway.LockGateway
-	requestGateway gateway.RequestGateway
-	tokenGateway   gateway.TokenGateway
-	rateLimiter    ratelimiter.RateLimiter
-	mid            middleware.Middleware
+	config   *configs.Config
+	settings *ratelimiter.Settings
+	conn     gateway.DatabaseGateway
+	rt       ratelimiter.RateLimiter
+	mid      middleware.Middleware
 )
 
 func main() {
 	loadConfig()
-	connectToRedis()
+	connectToDatabase()
 	createTokens()
 	initSettings()
-	initGateways()
 	initRateLimiter()
 	initMiddleware()
 	startServer()
@@ -52,13 +46,19 @@ func loadConfig() {
 	}
 }
 
-func connectToRedis() {
-	addr := fmt.Sprintf("%v:%v", config.Host, config.Port)
-	redisClient = redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: config.Password,
-		DB:       config.DB,
+func connectToDatabase() {
+	var err error
+	conn, err = db.NewDatabaseConnection(&gateway.DatabaseOptions{
+		Protocol: config.DBProtocol,
+		Host:     config.DBHost,
+		Port:     config.DBPort,
+		User:     config.DBUser,
+		Password: config.DBPassword,
+		Database: config.DBDatabase,
 	})
+	if err != nil {
+		log.Fatalf("unable to connect to database: %v", err)
+	}
 }
 
 func createTokens() {
@@ -73,7 +73,7 @@ func createTokens() {
 	}
 	ctx := context.Background()
 	for _, token := range tokens {
-		redisClient.Set(ctx, token.Token, token.Limit, 0)
+		conn.CreateToken(ctx, token.Token, token.Limit)
 	}
 }
 
@@ -81,18 +81,12 @@ func initSettings() {
 	settings = ratelimiter.NewSettings(config.RateLimit, config.ExpirationTime, config.LimitByToken)
 }
 
-func initGateways() {
-	lockGateway = redis_gateway.NewLockRedisGateway(redisClient)
-	requestGateway = redis_gateway.NewRequestRedisGateway(redisClient)
-	tokenGateway = redis_gateway.NewTokenRedisGateway(redisClient)
-}
-
 func initRateLimiter() {
-	rateLimiter = ratelimiter.NewDefaultRateLimiter(settings, lockGateway, requestGateway, tokenGateway)
+	rt = ratelimiter.NewDefaultRateLimiter(settings, conn)
 }
 
 func initMiddleware() {
-	mid = middleware.NewRateLimiterMiddleware(rateLimiter)
+	mid = middleware.NewRateLimiterMiddleware(rt)
 }
 
 func startServer() {

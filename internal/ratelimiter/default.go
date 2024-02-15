@@ -10,14 +10,12 @@ import (
 )
 
 type DefaultRateLimiter struct {
-	settings       *Settings
-	lockGateway    gateway.LockGateway
-	requestGateway gateway.RequestGateway
-	tokenGateway   gateway.TokenGateway
+	settings *Settings
+	db       gateway.DatabaseGateway
 }
 
-func NewDefaultRateLimiter(settings *Settings, lockGateway gateway.LockGateway, requestGatewat gateway.RequestGateway, tokenGateway gateway.TokenGateway) *DefaultRateLimiter {
-	return &DefaultRateLimiter{settings, lockGateway, requestGatewat, tokenGateway}
+func NewDefaultRateLimiter(settings *Settings, db gateway.DatabaseGateway) *DefaultRateLimiter {
+	return &DefaultRateLimiter{settings, db}
 }
 
 func (rt *DefaultRateLimiter) CanGo(ctx context.Context, r *http.Request) (bool, error) {
@@ -29,30 +27,30 @@ func (rt *DefaultRateLimiter) CanGo(ctx context.Context, r *http.Request) (bool,
 		}
 		key = host
 	}
-	locked, err := rt.lockGateway.IsLocked(ctx, key)
+	locked, err := rt.db.IsLocked(ctx, key)
 	if locked {
 		return false, nil
 	}
 	if err != nil {
 		return false, err
 	}
-	limit, err := rt.tokenGateway.GetLimit(ctx, key)
+	limit, err := rt.db.GetTokenLimit(ctx, key)
 	if err != nil {
 		return false, err
 	}
 	if limit == 0 {
 		limit = rt.settings.Ratelimit
 	}
-	total, err := rt.requestGateway.Count(ctx, key)
+	total, err := rt.db.CountRequests(ctx, key)
 	if err != nil {
 		return false, err
 	}
-	err = rt.requestGateway.Save(ctx, key)
+	err = rt.db.SaveRequest(ctx, key)
 	if err != nil {
 		return false, err
 	}
 	if total >= limit {
-		if err := rt.lockGateway.Lock(ctx, key, time.Second*time.Duration(rt.settings.ExpirationTime)); err != nil {
+		if err := rt.db.Lock(ctx, key, time.Second*time.Duration(rt.settings.ExpirationTime)); err != nil {
 			return false, err
 		}
 		return false, nil
