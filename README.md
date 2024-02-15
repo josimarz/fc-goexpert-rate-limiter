@@ -10,10 +10,12 @@ Este projeto implementa um *Rate Limiter* escrito na linguagem de programação 
 
 Na raiz deste projeto, encontra-se um arquivo denominado `app.env`, através do qual é possível definir as configurações do **Rate Limiter**.
 
-* `REDIS_HOST`: Endereço/IP para conexão com o servidor Redis.
-* `REDIS_PORT`: Porta para conexão com o servidor Redis.
-* `REDIS_PASSWORD`: Senha para acesso ao servidor Redis.
-* `REDIS_DB`: Nome do banco de dados Redis.
+* `DB_PROTOCOL`: Nome to protocolo para acesso ao banco de dados.
+* `DB_HOST`: Endereço/IP para conexão com o banco de dados.
+* `DB_PORT`: Porta para conexão com o banco de dados.
+* `DB_USER`: Nome to usuário para acesso ao banco de dados.
+* `DB_PASSWORD`: Senha para acesso ao banco de dados.
+* `DB_DATABASE`: Nome do banco de dados.
 * `RATE_LIMIT`: Número máximo de requisições por IP por segundo.
 * `LIMIT_BY_TOKEN`: Quando o valor desta configuração é `true`, a limitação de requisições será baseada no token enviado pelo cliente no cabeçalho da requisição. Caso contrário, a limitação será por IP.
 * `EXPIRATION_TIME`: Tempo de expiração em segundos quando um IP ou token é bloqueado.
@@ -58,7 +60,7 @@ Para testar uma grande quantidade de requisições com o objetivo de simular o b
 Segue abaixo exemplos de uso da ferramenta **Apache ab**:
 ```sh
 ab -n 20 http://localhost:8080/
-ab -n 100 -H "API_KEY: p7eWgd0PvJcqB3ea45pw3k5thpWaqpI12RGYU3MiP91Kgao5MCXtlFtL2rwISxYL" http://localhost:8080/
+ab -n 101 -H "API_KEY: p7eWgd0PvJcqB3ea45pw3k5thpWaqpI12RGYU3MiP91Kgao5MCXtlFtL2rwISxYL" http://localhost:8080/
 ```
 
 ### Executando testes de unidade e integração
